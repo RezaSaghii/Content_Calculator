@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { CheckCircle, Info, RefreshCw, Layers, Anchor, Image, Camera, Music, Type, Monitor, Clock, Gift, Book, MousePointer, MessageCircle, Text, Repeat, Hash, PenTool, Calendar, Users, Frame, BarChart, Repeat2, TrendingUp, Reply, Share2, ArrowLeft, Sparkles, Target, Instagram } from "lucide-react";
+import { CheckCircle, Info, RefreshCw, Layers, Anchor, Image, Camera, Music, Type, Monitor, Clock, Gift, Book, MousePointer, MessageCircle, Text, Repeat, Hash, PenTool, Calendar, Users, Frame, BarChart, Repeat2, TrendingUp, Reply, Share2, ArrowLeft, Sparkles, Target, Instagram, Lock } from "lucide-react";
 // Reels Checklist React Component — RTL & Modern
 // Notes:
 // - Tailwind CSS required (recommended: Vite + Tailwind).
@@ -12,6 +12,37 @@ const ICON_MAP = {
   Anchor, Image, Camera, Music, Type, Monitor, Clock, Gift, Book, MousePointer, MessageCircle, Text, Repeat, Hash, PenTool, Calendar, Users, Frame, BarChart, Repeat2, TrendingUp, Reply, Share2
 };
 export default function ReelsChecklist() {
+  const PASSWORD = "instagrampost1404";
+  const LOGIN_STORAGE_KEY = "reels_checklist_login";
+  
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    try {
+      return localStorage.getItem(LOGIN_STORAGE_KEY) === "true";
+    } catch {
+      return false;
+    }
+  });
+  
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  
+  function handleLogin(e) {
+    e.preventDefault();
+    if (password === PASSWORD) {
+      setIsAuthenticated(true);
+      try {
+        localStorage.setItem(LOGIN_STORAGE_KEY, "true");
+      } catch {
+        // ignore
+      }
+      setError("");
+      setPassword("");
+    } else {
+      setError("پسورد اشتباه است");
+      setPassword("");
+    }
+  }
+  
   const ITEMS = [
     { id: "hook", title: "قلاب (Hook) در ۳ ثانیه اول", desc: "شروع ویدیوی شما باید چنان قوی باشد که کاربر را حداقل تا ۳ ثانیه اول نگه دارد — سوالی کلیدی و هدفمند، صحنه‌ ای غیر منتظره و یا تعجب آور و یا وعده‌ای ارزشمند.", detailedDesc: "قلاب یا Hook مهم‌ترین و تاثیرگذارترین بخش ویدیوی شماست که در ۳ ثانیه اول نمایش داده می‌شود. این بخش تعیین می‌کند که آیا کاربر ویدیو را تماشا می‌کند یا اسکرول می‌کند.\n\nبرای ساخت یک قلاب قوی، می‌توانی از چند روش استفاده کنی:\n\n۱) پرسیدن یک سوال جذاب و درگیرکننده که مخاطب را به فکر وا دارد\n۲) نمایش یک صحنه تعجب‌آور یا غیرمنتظره که توجه را جلب کند\n۳) دادن یک وعده ارزشمند و مشخص که کاربر را به تماشای ادامه ی ریلز ترغیب کند\n\nمثال‌های خوب:\n• 'می‌دونستی که ۹۰٪ مردم این اشتباه رو می‌کنن؟'\n• 'این ترفند زندگیمو عوض کرد'\n• 'چیزی که هیچ‌کسی بهت نمی‌گه درباره...'\n\nبه یاد داشته باش که الگوریتم اینستاگرام به retention rate (نرخ ماندگاری) در ۳ ثانیه اول بسیار اهمیت می‌دهد، پس این بخش را جدی بگیر.", weight: 9, icon: "Anchor" },
     { id: "cover", title: "کاور ( thumbnail ) اختصاصی", desc: "کاوری حرفه‌ای با متن کوتاه که روی موبایل خوانا باشد و نرخ کلیک کاربران را افزایش دهد.", detailedDesc: "کاور یا thumbnail اولین چیزی است که کاربر در فید اینستاگرام می‌بیند و نقش بسیار مهمی در تصمیم‌گیری برای کلیک یا اسکرول دارد.\n\nیک کاور حرفه‌ای باید چند ویژگی داشته باشد:\n\n۱) تصویر واضح و با کیفیت که نمایانگر محتوای ویدیو باشد\n۲) متن کوتاه (۲-۴ کلمه) که کنجکاوی ایجاد کند و وعده ای ارزشمند به همراه داشته باشد\n۳) فونت بزرگ و خوانا که حتی در اندازه کوچک موبایل هم قابل خواندن باشد\n۴) کنتراست بالا بین متن و پس‌زمینه برای خوانایی بهتر\n۵) رنگ‌های روشن و متضاد که در فید شلوغ اینستاگرام متمایز شود\n\nهنگام طراحی کاور، به یاد داشته باش که بیشتر کاربران از موبایل استفاده می‌کنند، پس مطمئن شو که در اندازه کوچک هم واضح و جذاب است.\n\nهمچنین سعی کن کاور با محتوای ویدیو هماهنگ باشد تا کاربر احساس فریب نکند.", weight: 6, icon: "Image" },
@@ -43,7 +74,7 @@ export default function ReelsChecklist() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       return raw ? JSON.parse(raw) : {};
-    } catch (e) {
+    } catch {
       return {};
     }
   });
@@ -52,8 +83,30 @@ export default function ReelsChecklist() {
   const checkedWeight = ITEMS.reduce((s, it) => s + (checked[it.id] ? it.weight : 0), 0);
   const percent = Math.round((checkedWeight / totalWeight) * 100);
   useEffect(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(checked)); } catch (e) {}
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(checked)); } catch {
+      // ignore
+    }
   }, [checked]);
+  
+  useEffect(() => {
+    // مدیریت دکمه back مرورگر
+    function handlePopState() {
+      setShowResults(false);
+    }
+    
+    window.addEventListener('popstate', handlePopState);
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+  
+  useEffect(() => {
+    if (showResults) {
+      // اضافه کردن state به history وقتی به صفحه نتایج می‌رود
+      window.history.pushState({ page: 'results' }, '', window.location.href);
+    }
+  }, [showResults]);
   function toggle(id) {
     setChecked(prev => ({ ...prev, [id]: !prev[id] }));
   }
@@ -145,6 +198,46 @@ export default function ReelsChecklist() {
   function handleShowResults() {
     setShowResults(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  
+  if (!isAuthenticated) {
+    return (
+      <div dir="rtl" className="min-h-screen bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] flex items-center justify-center px-4">
+        <div className="max-w-md w-full">
+          <div className="bg-gradient-to-br from-indigo-900/50 to-indigo-700/30 border border-indigo-500/20 rounded-2xl p-8 shadow-lg backdrop-blur-md">
+            <div className="text-center mb-6">
+              <Lock className="w-12 h-12 text-indigo-400 mx-auto mb-4" />
+              <h1 className="text-2xl font-extrabold text-white mb-2">ورود به سیستم</h1>
+              <p className="text-sm text-gray-300">لطفاً پسورد را وارد کنید</p>
+            </div>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setError("");
+                  }}
+                  placeholder="پسورد را وارد کنید"
+                  className="w-full px-4 py-3 bg-indigo-900/50 border border-indigo-500/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  autoFocus
+                />
+                {error && (
+                  <p className="mt-2 text-sm text-red-400">{error}</p>
+                )}
+              </div>
+              <button
+                type="submit"
+                className="w-full px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg shadow-lg hover:from-indigo-500 hover:to-purple-500 font-semibold transition-all"
+              >
+                ورود
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
   }
   
   if (showResults) {
