@@ -288,7 +288,7 @@ export default function ReelsChecklist() {
                 <h5 className="text-sm font-semibold text-indigo-100">پیشنهادات تکمیلی</h5>
                 <ul className="mt-2 text-sm text-indigo-200 space-y-1">
                   <li>• انجام تست A/B روی کاور و قلاب ویدیو</li>
-                  <li>• استفاده از موسیفی و sound effect های مناسب با محتوا</li>
+                  <li>• استفاده از موسیقی و sound effect های مناسب با محتوا</li>
                   <li>• برنامه‌ریزی و مدیریت تقویم محتوا</li>
                 </ul>
               </div>
