@@ -275,9 +275,9 @@ export default function ReelsChecklist() {
               <div className="bg-gradient-to-br from-indigo-900/50 to-indigo-700/30 border border-indigo-500/20 rounded-2xl p-4 shadow-lg backdrop-blur-md">
                 <h4 className="text-sm font-semibold text-white flex items-center gap-2"><Info className="w-4 h-4 text-indigo-400" /> نکات کلیدی قبل از انتشار</h4>
                 <ul className="mt-3 text-sm text-gray-300 space-y-2">
-                  <li>• ۳ ثانیه اول ویدیو باید بسیار قوی و جذاب باشد</li>
+                  <li>• همیشه ۳ ثانیه اول ویدیو (قلاب ویدیو) مهم ترین قسمت ویدیو است</li>
                   <li>• زیرنویس و متن روی ویدیو باید واضح و خوانا باشد</li>
-                  <li>• از موسیقی‌های ترند با یک پیچش خلاقانه شخصی استفاده کن</li>
+                  <li>• از موسیقی‌های ترند و sfx های مناسب استفاده کن</li>
                 </ul>
               </div>
               <div className="bg-gradient-to-br from-indigo-900/50 to-indigo-700/30 border border-indigo-500/20 rounded-2xl p-4 shadow-lg backdrop-blur-md text-sm text-gray-200">
@@ -287,8 +287,8 @@ export default function ReelsChecklist() {
               <div className="bg-gradient-to-br from-indigo-500/20 to-indigo-300/10 rounded-2xl p-4 shadow-lg backdrop-blur-md">
                 <h5 className="text-sm font-semibold text-indigo-100">پیشنهادات تکمیلی</h5>
                 <ul className="mt-2 text-sm text-indigo-200 space-y-1">
-                  <li>• انجام تست A/B روی کاور و کپشن</li>
-                  <li>• ایجاد و استفاده از صدای اختصاصی برند</li>
+                  <li>• انجام تست A/B روی کاور و قلاب ویدیو</li>
+                  <li>• استفاده از موسیفی و sound effect های مناسب با محتوا</li>
                   <li>• برنامه‌ریزی و مدیریت تقویم محتوا</li>
                 </ul>
               </div>
