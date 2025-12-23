@@ -12,7 +12,7 @@ const ICON_MAP = {
   Anchor, Image, Camera, Music, Type, Monitor, Clock, Gift, Book, MousePointer, MessageCircle, Text, Repeat, Hash, PenTool, Calendar, Users, Frame, BarChart, Repeat2, TrendingUp, Reply, Share2
 };
 export default function ReelsChecklist() {
-  const PASSWORD = "instagrampost1404";
+  const PASSWORD = "65432211";
   const LOGIN_STORAGE_KEY = "reels_checklist_login";
   
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -214,6 +214,7 @@ export default function ReelsChecklist() {
               <div>
                 <input
                   type="password"
+                  inputMode="numeric"
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
