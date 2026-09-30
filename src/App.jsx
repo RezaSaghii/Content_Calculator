@@ -1,48 +1,117 @@
-import React, { useEffect, useState } from "react";
-import { CheckCircle, Info, RefreshCw, Layers, Anchor, Image, Camera, Music, Type, Monitor, Clock, Gift, Book, MousePointer, MessageCircle, Text, Repeat, Hash, PenTool, Calendar, Users, Frame, BarChart, Repeat2, TrendingUp, Reply, Share2, ArrowLeft, Sparkles, Target, Instagram, Lock } from "lucide-react";
-// Reels Checklist React Component — RTL & Modern
-// Notes:
-// - Tailwind CSS required (recommended: Vite + Tailwind).
-// - Place this file in your src/components and import <ReelsChecklist /> in App.jsx.
-// - State persists to localStorage (key: "reels_checklist_v1").
-// - The top-level container is RTL-compatible via dir="rtl".
-// - Updated with modern dark theme, professional styling, and icons for each item.
-// - Viral score is now a fixed bottom bar for constant visibility without obstructing content (added padding-bottom to main container).
+import React, { useEffect, useId, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  CheckCircle, Info, RefreshCw, Layers, Anchor, Image, Camera, Music, Type, Monitor,
+  Clock, Gift, Book, MousePointer, MessageCircle, Text, Repeat, Hash, PenTool, Calendar,
+  Users, Frame, BarChart, Repeat2, TrendingUp, Reply, Share2, ArrowLeft, Sparkles, Target,
+  Instagram, Lock, Crown, User, LogIn, ShieldCheck, X, ChevronDown
+} from "lucide-react";
+
 const ICON_MAP = {
-  Anchor, Image, Camera, Music, Type, Monitor, Clock, Gift, Book, MousePointer, MessageCircle, Text, Repeat, Hash, PenTool, Calendar, Users, Frame, BarChart, Repeat2, TrendingUp, Reply, Share2
+  Anchor, Image, Camera, Music, Type, Monitor, Clock, Gift, Book, MousePointer, MessageCircle,
+  Text, Repeat, Hash, PenTool, Calendar, Users, Frame, BarChart, Repeat2, TrendingUp, Reply, Share2
 };
+
+function SiteShell({ children, className = "" }) {
+  return (
+    <div dir="rtl" className={`site-shell ${className}`}>
+      <div className="orb orb-a" />
+      <div className="orb orb-b" />
+      <div className="relative z-10">{children}</div>
+    </div>
+  );
+}
+
+function BrandMark({ size = "md" }) {
+  const cls = size === "lg" ? "w-16 h-16 rounded-[1.35rem]" : "w-11 h-11 rounded-[1.05rem]";
+  return (
+    <div className={`brand-mark ${cls}`}>
+      <Instagram className={size === "lg" ? "w-8 h-8" : "w-5 h-5"} />
+    </div>
+  );
+}
+
 export default function ReelsChecklist() {
   const PASSWORD = "65432211";
+  const ACCESS_STORAGE_KEY = "reels_checklist_access";
   const LOGIN_STORAGE_KEY = "reels_checklist_login";
-  
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+
+  const [access, setAccess] = useState(() => {
     try {
-      return localStorage.getItem(LOGIN_STORAGE_KEY) === "true";
+      const stored = localStorage.getItem(ACCESS_STORAGE_KEY);
+      if (stored === "premium" || stored === "guest") return stored;
+      if (localStorage.getItem(LOGIN_STORAGE_KEY) === "true") return "premium";
+      return null;
     } catch {
-      return false;
+      return null;
     }
   });
-  
+
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  
+  const [shakeId, setShakeId] = useState(0);
+  const [premiumPrompt, setPremiumPrompt] = useState(null);
+  const isPremium = access === "premium";
+
+  function grantPremium() {
+    setAccess("premium");
+    try {
+      localStorage.setItem(ACCESS_STORAGE_KEY, "premium");
+      localStorage.setItem(LOGIN_STORAGE_KEY, "true");
+    } catch {
+      // ignore storage errors
+    }
+    setError("");
+    setPassword("");
+  }
+
   function handleLogin(e) {
     e.preventDefault();
     if (password === PASSWORD) {
-      setIsAuthenticated(true);
-      try {
-        localStorage.setItem(LOGIN_STORAGE_KEY, "true");
-      } catch {
-        // ignore
+      const intent = premiumPrompt;
+      grantPremium();
+      setPremiumPrompt(null);
+      if (intent === "results") {
+        setShowResults(true);
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
-      setError("");
-      setPassword("");
     } else {
       setError("پسورد اشتباه است");
       setPassword("");
+      setShakeId((id) => id + 1);
     }
   }
-  
+
+  function handleGuest() {
+    setAccess("guest");
+    try {
+      localStorage.setItem(ACCESS_STORAGE_KEY, "guest");
+      localStorage.removeItem(LOGIN_STORAGE_KEY);
+    } catch {
+      // ignore storage errors
+    }
+  }
+
+  function handleLogout() {
+    setAccess(null);
+    setPremiumPrompt(null);
+    setError("");
+    setPassword("");
+    setShowResults(false);
+    try {
+      localStorage.removeItem(ACCESS_STORAGE_KEY);
+      localStorage.removeItem(LOGIN_STORAGE_KEY);
+    } catch {
+      // ignore storage errors
+    }
+  }
+
+  function closePremiumPrompt() {
+    setPremiumPrompt(null);
+    setError("");
+    setPassword("");
+  }
+
   const ITEMS = [
     { id: "hook", title: "قلاب (Hook) در ۳ ثانیه اول", desc: "شروع ویدیوی شما باید چنان قوی باشد که کاربر را حداقل تا ۳ ثانیه اول نگه دارد — سوالی کلیدی و هدفمند، صحنه‌ ای غیر منتظره و یا تعجب آور و یا وعده‌ای ارزشمند.", detailedDesc: "قلاب یا Hook مهم‌ترین و تاثیرگذارترین بخش ویدیوی شماست که در ۳ ثانیه اول نمایش داده می‌شود. این بخش تعیین می‌کند که آیا کاربر ویدیو را تماشا می‌کند یا اسکرول می‌کند.\n\nبرای ساخت یک قلاب قوی، می‌توانی از چند روش استفاده کنی:\n\n۱) پرسیدن یک سوال جذاب و درگیرکننده که مخاطب را به فکر وا دارد\n۲) نمایش یک صحنه تعجب‌آور یا غیرمنتظره که توجه را جلب کند\n۳) دادن یک وعده ارزشمند و مشخص که کاربر را به تماشای ادامه ی ریلز ترغیب کند\n\nمثال‌های خوب:\n• 'می‌دونستی که ۹۰٪ مردم این اشتباه رو می‌کنن؟'\n• 'این ترفند زندگیمو عوض کرد'\n• 'چیزی که هیچ‌کسی بهت نمی‌گه درباره...'\n\nبه یاد داشته باش که الگوریتم اینستاگرام به retention rate (نرخ ماندگاری) در ۳ ثانیه اول بسیار اهمیت می‌دهد، پس این بخش را جدی بگیر.", weight: 9, icon: "Anchor" },
     { id: "cover", title: "کاور ( thumbnail ) اختصاصی", desc: "کاوری حرفه‌ای با متن کوتاه که روی موبایل خوانا باشد و نرخ کلیک کاربران را افزایش دهد.", detailedDesc: "کاور یا thumbnail اولین چیزی است که کاربر در فید اینستاگرام می‌بیند و نقش بسیار مهمی در تصمیم‌گیری برای کلیک یا اسکرول دارد.\n\nیک کاور حرفه‌ای باید چند ویژگی داشته باشد:\n\n۱) تصویر واضح و با کیفیت که نمایانگر محتوای ویدیو باشد\n۲) متن کوتاه (۲-۴ کلمه) که کنجکاوی ایجاد کند و وعده ای ارزشمند به همراه داشته باشد\n۳) فونت بزرگ و خوانا که حتی در اندازه کوچک موبایل هم قابل خواندن باشد\n۴) کنتراست بالا بین متن و پس‌زمینه برای خوانایی بهتر\n۵) رنگ‌های روشن و متضاد که در فید شلوغ اینستاگرام متمایز شود\n\nهنگام طراحی کاور، به یاد داشته باش که بیشتر کاربران از موبایل استفاده می‌کنند، پس مطمئن شو که در اندازه کوچک هم واضح و جذاب است.\n\nهمچنین سعی کن کاور با محتوای ویدیو هماهنگ باشد تا کاربر احساس فریب نکند.", weight: 6, icon: "Image" },
@@ -82,66 +151,55 @@ export default function ReelsChecklist() {
   const totalWeight = ITEMS.reduce((s, it) => s + it.weight, 0);
   const checkedWeight = ITEMS.reduce((s, it) => s + (checked[it.id] ? it.weight : 0), 0);
   const percent = Math.round((checkedWeight / totalWeight) * 100);
+  const checkedCount = ITEMS.filter((it) => checked[it.id]).length;
+
   useEffect(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(checked)); } catch {
-      // ignore
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(checked));
+    } catch {
+      // ignore storage errors
     }
   }, [checked]);
-  
+
   useEffect(() => {
-    // مدیریت دکمه back مرورگر
-    function handlePopState() {
-      setShowResults(false);
-    }
-    
-    window.addEventListener('popstate', handlePopState);
-    
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
+    function handlePopState() { setShowResults(false); }
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
   }, []);
-  
+
   useEffect(() => {
-    if (showResults) {
-      // اضافه کردن state به history وقتی به صفحه نتایج می‌رود
-      window.history.pushState({ page: 'results' }, '', window.location.href);
-    }
+    if (showResults) window.history.pushState({ page: "results" }, "", window.location.href);
   }, [showResults]);
+
   function toggle(id) {
-    setChecked(prev => ({ ...prev, [id]: !prev[id] }));
+    setChecked((prev) => ({ ...prev, [id]: !prev[id] }));
   }
   function reset() { setChecked({}); }
+
   function generateRecommendations() {
-    const unchecked = ITEMS.filter(it => !checked[it.id])
-      .sort((a, b) => b.weight - a.weight);
-    
+    const unchecked = ITEMS.filter((it) => !checked[it.id]).sort((a, b) => b.weight - a.weight);
     const recommendations = [];
-    
-    // توصیه‌های بر اساس آیتم‌های انتخاب نشده با وزن بالا
-    const highPriority = unchecked.filter(it => it.weight >= 7);
+    const highPriority = unchecked.filter((it) => it.weight >= 7);
     if (highPriority.length > 0) {
       recommendations.push({
         type: "critical",
         title: "اولویت‌های مهم",
-        items: highPriority.slice(0, 3).map(it => ({
+        items: highPriority.slice(0, 3).map((it) => ({
           title: it.title,
           weight: it.weight,
           suggestion: getSuggestion(it.id)
         }))
       });
     }
-    
-    // توصیه‌های بر اساس دسته‌بندی
     const categories = {
-      start: unchecked.filter(it => ["hook", "first-frame", "hook_text"].includes(it.id)),
-      content: unchecked.filter(it => ["value", "story", "length"].includes(it.id)),
-      engagement: unchecked.filter(it => ["engage_early", "cta", "engage_reply"].includes(it.id)),
-      technical: unchecked.filter(it => ["audio", "captions", "aspect"].includes(it.id)),
-      optimization: unchecked.filter(it => ["hashtags", "caption_text", "post_time", "analytics"].includes(it.id))
+      start: unchecked.filter((it) => ["hook", "first-frame", "hook_text"].includes(it.id)),
+      content: unchecked.filter((it) => ["value", "story", "length"].includes(it.id)),
+      engagement: unchecked.filter((it) => ["engage_early", "cta", "engage_reply"].includes(it.id)),
+      technical: unchecked.filter((it) => ["audio", "captions", "aspect"].includes(it.id)),
+      optimization: unchecked.filter((it) => ["hashtags", "caption_text", "post_time", "analytics"].includes(it.id))
     };
-    
-    Object.entries(categories).forEach(([cat, items]) => {
-      if (items.length > 0) {
+    Object.entries(categories).forEach(([cat, catItems]) => {
+      if (catItems.length > 0) {
         const catName = {
           start: "شروع ویدیو",
           content: "محتوای ویدیو",
@@ -149,11 +207,10 @@ export default function ReelsChecklist() {
           technical: "جنبه‌های فنی",
           optimization: "بهینه‌سازی"
         }[cat];
-        
         recommendations.push({
           type: "category",
           title: catName,
-          items: items.slice(0, 2).map(it => ({
+          items: catItems.slice(0, 2).map((it) => ({
             title: it.title,
             weight: it.weight,
             suggestion: getSuggestion(it.id)
@@ -161,10 +218,9 @@ export default function ReelsChecklist() {
         });
       }
     });
-    
-    return recommendations.slice(0, 4); // حداکثر ۴ دسته توصیه
+    return recommendations.slice(0, 4);
   }
-  
+
   function getSuggestion(id) {
     const suggestions = {
       hook: "یک سوال کلیدی و هدفمند، صحنه غیرمنتظره یا وعده ارزشمند در ۳ ثانیه اول قرار بده. این مهم‌ترین بخش ویدیوی توست!",
@@ -194,287 +250,636 @@ export default function ReelsChecklist() {
     };
     return suggestions[id] || "این مورد را بررسی و بهبود بده.";
   }
-  
+
   function handleShowResults() {
+    if (!isPremium) {
+      setPremiumPrompt("results");
+      return;
+    }
     setShowResults(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
-  
-  if (!isAuthenticated) {
+
+  if (!access) {
     return (
-      <div dir="rtl" className="min-h-screen bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] flex items-center justify-center px-4">
-        <div className="max-w-md w-full">
-          <div className="bg-gradient-to-br from-indigo-900/50 to-indigo-700/30 border border-indigo-500/20 rounded-2xl p-8 shadow-lg backdrop-blur-md">
-            <div className="text-center mb-6">
-              <Lock className="w-12 h-12 text-indigo-400 mx-auto mb-4" />
-              <h1 className="text-2xl font-extrabold text-white mb-2">ورود به سیستم</h1>
-              <p className="text-sm text-gray-300">لطفاً پسورد را وارد کنید</p>
-            </div>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <input
-                  type="password"
-                  inputMode="numeric"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setError("");
-                  }}
-                  placeholder="پسورد را وارد کنید"
-                  className="w-full px-4 py-3 bg-indigo-900/50 border border-indigo-500/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  autoFocus
-                />
-                {error && (
-                  <p className="mt-2 text-sm text-red-400">{error}</p>
-                )}
-              </div>
-              <button
-                type="submit"
-                className="w-full px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg shadow-lg hover:from-indigo-500 hover:to-purple-500 font-semibold transition-all"
-              >
-                ورود
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
+      <LoginGate
+        password={password}
+        error={error}
+        shakeId={shakeId}
+        onPasswordChange={(value) => {
+          setPassword(value);
+          setError("");
+        }}
+        onLogin={handleLogin}
+        onGuest={handleGuest}
+      />
     );
   }
-  
+
   if (showResults) {
-    return <ResultsPage percent={percent} recommendations={generateRecommendations()} onBack={() => setShowResults(false)} />;
+    return (
+      <ResultsPage
+        percent={percent}
+        recommendations={generateRecommendations()}
+        onBack={() => setShowResults(false)}
+      />
+    );
   }
-  
+
   return (
-    <div dir="rtl" className="min-h-screen bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] pt-8 pb-28 px-4">
-      <div className="max-w-5xl mx-auto">
-        <header className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="text-center w-full">
-            <h1 className="text-2xl sm:text-3xl font-extrabold leading-tight text-white mb-5 ">چک‌لیست و محاسبه گر تولید محتوا برای Reels اینستاگرام</h1>
-            <p className="mt-1 text-sm text-gray-300">راهنمای جامع و کاربردی برای ساخت محتوای وایرال — احتمال وایرال شدن بر اساس اهمیت هر مورد محاسبه می‌شود</p>
+    <SiteShell className="pb-28">
+      <div className="page-frame pt-5 sm:pt-7 lg:pt-9">
+        <motion.header
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45 }}
+          className="glass-panel rounded-[1.5rem] lg:rounded-[1.75rem] px-4 sm:px-6 lg:px-7 py-4 mb-6 lg:mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+        >
+          <div className="flex items-center gap-3.5">
+            <BrandMark />
+            <div>
+              <p className="text-[11px] tracking-[0.2em] text-rose-300/85 font-semibold">REELS LAB</p>
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-extrabold text-white leading-tight">چک‌لیست تولید محتوای ریلز</h1>
+            </div>
           </div>
-        </header>
-        <main className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <section className="lg:col-span-2 space-y-4">
-            {ITEMS.map(it => (
-              <ChecklistCard key={it.id} item={it} checked={!!checked[it.id]} onToggle={() => toggle(it.id)} />
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            {isPremium ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-[var(--amber-soft)] text-amber-200 border border-amber-300/20">
+                <Crown className="w-3.5 h-3.5" /> پریمیوم
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-white/5 text-zinc-300 border border-white/10">
+                <User className="w-3.5 h-3.5" /> پایه
+              </span>
+            )}
+            <button type="button" onClick={handleLogout} className="px-3 py-1.5 rounded-full text-xs text-zinc-400 border border-white/10 hover:bg-white/5 transition-colors">
+              خروج
+            </button>
+          </div>
+        </motion.header>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.05 }}
+          className="mb-7 lg:mb-10 grid lg:grid-cols-[1.4fr_auto] gap-5 lg:items-end"
+        >
+          <div>
+            <h2 className="text-[1.65rem] sm:text-4xl lg:text-[2.75rem] font-black text-white leading-[1.2] max-w-3xl tracking-tight">
+              قبل از انتشار، ریلزت را با معیارهای واقعی وایرال شدن بسنج
+            </h2>
+            <p className="mt-3 sm:mt-4 text-sm sm:text-base text-zinc-400 max-w-2xl leading-relaxed">
+              هر مورد را تیک بزن؛ امتیاز احتمال وایرال شدن به‌صورت زنده محاسبه می‌شود.
+            </p>
+          </div>
+          <div className="flex flex-wrap lg:flex-col items-start lg:items-end gap-2.5 text-xs text-zinc-400">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full soft-panel">
+              <Layers className="w-3.5 h-3.5 text-teal-300" />
+              {checkedCount} از {ITEMS.length} مورد
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full soft-panel">
+              <Target className="w-3.5 h-3.5 text-rose-300" />
+              امتیاز فعلی {percent}%
+            </span>
+          </div>
+        </motion.div>
+
+        {!isPremium && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 rounded-2xl border border-rose-500/20 bg-[var(--rose-soft)] px-4 sm:px-5 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+          >
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 w-9 h-9 rounded-xl bg-rose-500/20 border border-rose-400/20 flex items-center justify-center shrink-0">
+                <Crown className="w-4 h-4 text-rose-200" />
+              </div>
+              <p className="text-sm text-zinc-200 leading-relaxed">
+                با دسترسی پایه داخل سایت هستی. توضیحات کامل و بررسی نهایی مخصوص پریمیوم است.
+              </p>
+            </div>
+            <button type="button" onClick={() => setPremiumPrompt("upgrade")} className="btn-primary shrink-0 text-sm px-4 py-2.5">
+              <Crown className="w-4 h-4" /> ارتقا به پریمیوم
+            </button>
+          </motion.div>
+        )}
+
+        <main className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.75fr)_minmax(280px,0.85fr)] gap-5 lg:gap-7">
+          <section className="space-y-3 min-w-0">
+            {ITEMS.map((it, index) => (
+              <ChecklistCard
+                key={it.id}
+                item={it}
+                index={index}
+                checked={!!checked[it.id]}
+                onToggle={() => toggle(it.id)}
+                isPremium={isPremium}
+                onRequestPremium={() => setPremiumPrompt("details")}
+              />
             ))}
-            <div className="flex items-center justify-between gap-3 mt-4">
-              <div className="flex items-center gap-2">
-                <button onClick={reset} className="inline-flex items-center gap-2 px-3 py-2 bg-indigo-900/50 text-gray-200 rounded-lg shadow-sm hover:bg-indigo-800/50 text-sm border border-indigo-500/20">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <button onClick={reset} className="btn-ghost text-sm py-2.5 px-3.5">
                   <RefreshCw className="w-4 h-4" /> پاک کردن همه
                 </button>
-                <button onClick={handleShowResults} className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg shadow-lg hover:from-indigo-500 hover:to-purple-500 text-sm font-semibold transition-all">
-                  <Target className="w-4 h-4" /> بررسی نهایی
+                <button onClick={handleShowResults} className="btn-primary text-sm py-2.5 px-4">
+                  {isPremium ? <Target className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                  بررسی نهایی
                 </button>
               </div>
-              <div className="text-sm text-gray-400">پیشرفت شما به صورت خودکار در مرورگر ذخیره می‌شود</div>
+              <p className="text-xs text-zinc-500">پیشرفت به‌صورت خودکار در مرورگر ذخیره می‌شود</p>
             </div>
           </section>
-          <aside className="lg:col-span-1">
-            <div className="sticky top-6 space-y-4">
-              <div className="bg-gradient-to-br from-indigo-900/50 to-indigo-700/30 border border-indigo-500/20 rounded-2xl p-4 shadow-lg backdrop-blur-md">
-                <h4 className="text-sm font-semibold text-white flex items-center gap-2"><Info className="w-4 h-4 text-indigo-400" /> نکات کلیدی قبل از انتشار</h4>
-                <ul className="mt-3 text-sm text-gray-300 space-y-2">
-                  <li>• همیشه ۳ ثانیه اول ویدیو (قلاب ویدیو) مهم ترین قسمت ویدیو است</li>
-                  <li>• زیرنویس و متن روی ویدیو باید واضح و خوانا باشد</li>
-                  <li>• از موسیقی‌های ترند و sfx های مناسب استفاده کن</li>
-                </ul>
+
+          <aside className="xl:sticky xl:top-6 h-fit space-y-4 order-first xl:order-none">
+            <div className="glass-panel rounded-[1.5rem] p-5 lg:p-6">
+              <div className="flex items-center justify-between gap-4 mb-5">
+                <div>
+                  <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                    <Target className="w-4 h-4 text-rose-300" /> امتیاز زنده
+                  </h4>
+                  <p className="text-xs text-zinc-500 mt-1">بر اساس وزن موارد انتخاب‌شده</p>
+                </div>
+                <ProgressRing percent={percent} size={72} stroke={6} />
               </div>
-              <div className="bg-gradient-to-br from-indigo-900/50 to-indigo-700/30 border border-indigo-500/20 rounded-2xl p-4 shadow-lg backdrop-blur-md text-sm text-gray-200">
-                <h5 className="font-semibold mb-2 text-white">درباره احتمال وایرال شدن</h5>
-                <p className="text-xs text-gray-400">این امتیاز بر اساس وزن اهمیت هر مورد محاسبه می‌شود. از آن به عنوان راهنمای کلی استفاده کن و به یاد داشته باش که کیفیت محتوا مهم‌تر از امتیاز است.</p>
+              <div className="h-2.5 rounded-full bg-white/5 overflow-hidden mb-4">
+                <motion.div
+                  className="score-fill h-full rounded-full"
+                  initial={false}
+                  animate={{ width: `${percent}%` }}
+                  transition={{ type: "spring", stiffness: 120, damping: 20 }}
+                />
               </div>
-              <div className="bg-gradient-to-br from-indigo-500/20 to-indigo-300/10 rounded-2xl p-4 shadow-lg backdrop-blur-md">
-                <h5 className="text-sm font-semibold text-indigo-100">پیشنهادات تکمیلی</h5>
-                <ul className="mt-2 text-sm text-indigo-200 space-y-1">
-                  <li>• انجام تست A/B روی کاور و قلاب ویدیو</li>
-                  <li>• استفاده از موسیقی و sound effect های مناسب با محتوا</li>
-                  <li>• برنامه‌ریزی و مدیریت تقویم محتوا</li>
-                </ul>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-zinc-400">وضعیت</span>
+                <span className="font-semibold text-white">{percent > 75 ? "عالی" : percent > 45 ? "خوب" : "نیازمند بهبود"}</span>
               </div>
+            </div>
+
+            <div className="soft-panel rounded-[1.5rem] p-5">
+              <h4 className="text-sm font-bold text-white flex items-center gap-2 mb-3">
+                <Info className="w-4 h-4 text-teal-300" /> نکات کلیدی
+              </h4>
+              <ul className="space-y-2.5 text-sm text-zinc-400">
+                <li className="flex gap-2"><span className="text-rose-300 mt-1">•</span><span>۳ ثانیه اول مهم‌ترین بخش ریلز است</span></li>
+                <li className="flex gap-2"><span className="text-rose-300 mt-1">•</span><span>زیرنویس خوانا نرخ تماشای کامل را بالا می‌برد</span></li>
+                <li className="flex gap-2"><span className="text-rose-300 mt-1">•</span><span>موسیقی ترند + SFX مناسب تفاوت ایجاد می‌کند</span></li>
+              </ul>
+            </div>
+
+            <div className="soft-panel rounded-[1.5rem] p-5 hidden xl:block">
+              <h5 className="text-sm font-bold text-white mb-2">درباره امتیاز</h5>
+              <p className="text-xs text-zinc-500 leading-relaxed">
+                این امتیاز بر اساس وزن اهمیت هر مورد محاسبه می‌شود. کیفیت محتوا همیشه مهم‌تر از عدد است.
+              </p>
             </div>
           </aside>
         </main>
-        <footer className="mt-12 mb-3 text-center">
-          <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
+
+        <footer className="mt-12 mb-5 text-center">
+          <div className="inline-flex flex-wrap items-center justify-center gap-2 text-sm text-zinc-500 soft-panel rounded-full px-4 py-2.5">
             <span>توسعه یافته توسط رضا ساقی</span>
-            <a 
-              href="https://instagram.com/_rezasaghi" 
-              target="_blank" 
+            <a
+              href="https://instagram.com/_rezasaghi"
+              target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-indigo-400 hover:text-indigo-300 transition-colors ltr"
+              className="inline-flex items-center gap-1 text-rose-300 hover:text-rose-200 transition-colors"
               dir="ltr"
             >
               <Instagram className="w-4 h-4" />
-              <span>@_rezasaghi</span>
+              @_rezasaghi
             </a>
           </div>
         </footer>
       </div>
-      {/* Fixed Bottom Bar for Viral Score */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-br from-indigo-900/50 to-indigo-700/30 border-t border-indigo-500/20 shadow-lg backdrop-blur-md h-20">
-        <div className="max-w-5xl mx-auto h-full flex items-center justify-between px-4 gap-4">
-          <div className="flex items-center gap-4">
-            <Layers className="w-5 h-5 text-indigo-400" />
-            <div className="flex items-center gap-2">
-              <span className="text-base text-gray-300 leading-none">احتمال وایرال شدن:</span>
-              <span className="text-xl font-bold text-white leading-none">{percent}%</span>
+
+      <div className="fixed bottom-0 left-0 right-0 z-50 score-bar h-[4.75rem]">
+        <div className="page-frame h-full flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-11 h-11 rounded-2xl bg-rose-500/15 border border-rose-400/20 flex items-center justify-center shrink-0">
+              <Layers className="w-5 h-5 text-rose-300" />
+            </div>
+            <div className="min-w-0 flex flex-col gap-1.5">
+              <p className="text-xs text-zinc-500 leading-none">احتمال وایرال شدن</p>
+              <p className="text-xl font-black text-white leading-none">{percent}%</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16">
-              <ProgressRing percent={percent} size={64} stroke={6} />
+          <div className="hidden md:flex items-center flex-1 max-w-xs mx-6">
+            <div className="w-full h-2 rounded-full bg-white/5 overflow-hidden">
+              <div className="score-fill h-full rounded-full" style={{ width: `${percent}%` }} />
             </div>
-            <div className="text-sm text-gray-300">وضعیت: <span className="font-medium text-white">{percent > 75 ? 'عالی' : percent > 45 ? 'خوب' : 'نیازمند بهبود'}</span></div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:block text-sm text-zinc-400">
+              وضعیت: <span className="font-semibold text-white">{percent > 75 ? "عالی" : percent > 45 ? "خوب" : "نیازمند بهبود"}</span>
+            </div>
+            <ProgressRing percent={percent} size={56} stroke={5} />
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {premiumPrompt && (
+          <PremiumPrompt
+            password={password}
+            error={error}
+            shakeId={shakeId}
+            onPasswordChange={(value) => {
+              setPassword(value);
+              setError("");
+            }}
+            onSubmit={handleLogin}
+            onClose={closePremiumPrompt}
+          />
+        )}
+      </AnimatePresence>
+    </SiteShell>
+  );
+}
+
+function LoginGate({ password, error, shakeId, onPasswordChange, onLogin, onGuest }) {
+  return (
+    <SiteShell className="flex items-center justify-center px-4 sm:px-6 py-8 lg:py-12">
+      <motion.div
+        initial={{ opacity: 0, y: 18, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+        className="login-split"
+      >
+        <div className="login-brand">
+          <div className="relative z-[1]">
+            <div className="flex items-center gap-3 mb-8 lg:mb-12">
+              <BrandMark size="lg" />
+              <div>
+                <p className="text-[11px] tracking-[0.28em] text-rose-200/90 font-semibold">REELS LAB</p>
+                <p className="text-xs text-zinc-400 mt-0.5">توسط رضا ساقی</p>
+              </div>
+            </div>
+            <h1 className="text-[2rem] sm:text-4xl lg:text-[2.85rem] font-black text-white leading-[1.2] tracking-tight max-w-md">
+              چک‌لیست حرفه‌ای
+              <span className="block text-transparent bg-clip-text bg-gradient-to-l from-rose-300 via-rose-200 to-amber-200">
+                تولید ریلز
+              </span>
+            </h1>
+            <p className="mt-5 text-sm sm:text-[15px] text-zinc-300/90 leading-relaxed max-w-sm">
+              معیارهای واقعی وایرال شدن را یک‌جا ببین، امتیاز بگیر و قبل از انتشار محتوایت را بهینه کن.
+            </p>
+          </div>
+          <div className="relative z-[1] mt-10 lg:mt-0 pt-6 border-t border-white/10">
+            <p className="text-xs text-zinc-500 leading-relaxed max-w-sm">
+              دسترسی پریمیوم برای توضیحات کامل و بررسی نهایی؛ دسترسی پایه برای شروع سریع.
+            </p>
+          </div>
+        </div>
+
+        <div className="glass-panel rounded-[1.75rem] p-5 sm:p-7 lg:p-8 space-y-5 flex flex-col justify-center">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-black text-white">ورود به چک‌لیست</h2>
+            <p className="mt-1.5 text-sm text-zinc-400">سطح دسترسی‌ات را انتخاب کن</p>
+          </div>
+
+          <div className="rounded-2xl border border-amber-300/20 bg-[var(--amber-soft)] p-4 sm:p-5">
+            <div className="flex items-center gap-2 mb-1">
+              <Crown className="w-4 h-4 text-amber-300" />
+              <h3 className="text-sm font-bold text-white">دسترسی پریمیوم</h3>
+            </div>
+            <p className="text-xs text-zinc-300 mb-4 leading-relaxed">
+              توضیحات کامل هر مورد و بررسی نهایی با پسورد پریمیوم باز می‌شود.
+            </p>
+            <form onSubmit={onLogin} className="space-y-3">
+              <PasswordField
+                password={password}
+                error={error}
+                shakeId={shakeId}
+                onPasswordChange={onPasswordChange}
+                centered
+              />
+              <button type="submit" className="btn-primary w-full">
+                <ShieldCheck className="w-4 h-4" />
+                ورود با دسترسی پریمیوم
+              </button>
+            </form>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-white/10" />
+            <span className="text-[11px] text-zinc-500">یا</span>
+            <div className="h-px flex-1 bg-white/10" />
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 sm:p-5">
+            <div className="flex items-center gap-2 mb-1">
+              <User className="w-4 h-4 text-teal-300" />
+              <h3 className="text-sm font-bold text-white">دسترسی پایه</h3>
+            </div>
+            <p className="text-xs text-zinc-400 mb-4 leading-relaxed">
+              بدون پسورد وارد شو و از چک‌لیست با امکانات پایه استفاده کن.
+            </p>
+            <button type="button" onClick={onGuest} className="btn-ghost w-full">
+              <LogIn className="w-4 h-4" />
+              ورود به عنوان مهمان
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </SiteShell>
+  );
+}
+
+function PasswordField({ password, error, shakeId, onPasswordChange, centered = false, autoFocus = true }) {
+  return (
+    <div className="space-y-2">
+      <motion.div
+        key={shakeId}
+        animate={shakeId > 0 ? { x: [0, -10, 10, -8, 8, -4, 4, 0] } : { x: 0 }}
+        transition={{ duration: 0.45, ease: "easeInOut" }}
+      >
+        <input
+          type="password"
+          inputMode="numeric"
+          value={password}
+          onChange={(e) => onPasswordChange(e.target.value)}
+          placeholder="پسورد پریمیوم"
+          className={`field-input ${centered ? "text-center" : ""} ${error ? "field-input-error" : ""}`}
+          autoFocus={autoFocus}
+          aria-invalid={!!error}
+        />
+      </motion.div>
+      <p
+        className={`text-sm min-h-5 leading-5 transition-opacity duration-200 ${
+          centered ? "text-center" : ""
+        } ${error ? "text-rose-300 opacity-100" : "opacity-0"}`}
+        aria-live="polite"
+      >
+        {error || "پسورد اشتباه است"}
+      </p>
     </div>
   );
 }
-function ChecklistCard({ item, checked, onToggle }) {
-  const [open, setOpen] = useState(false);
-  const IconComponent = ICON_MAP[item.icon];
+
+function PremiumPrompt({ password, error, shakeId, onPasswordChange, onSubmit, onClose }) {
   return (
-    <article className={`bg-gradient-to-br from-indigo-900/50 to-indigo-700/30 border border-indigo-500/20 rounded-2xl p-4 shadow-lg backdrop-blur-md flex flex-col gap-4`}>
-      <div className="flex items-start gap-3 w-full">
-        <label className="flex items-center gap-3 cursor-pointer w-full" onClick={onToggle}>
-          <input type="checkbox" checked={checked} onChange={() => {}} className="w-5 h-5 rounded-md border-gray-600 text-indigo-400 focus:ring-0 bg-indigo-900/50" aria-label={item.title} />
-          <div className="flex-1">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <IconComponent className="w-5 h-5 text-indigo-400" />
-                <h3 className="text-sm font-semibold text-white">{item.title}</h3>
-              </div>
-              <div className="text-xs text-gray-300">وزن: <span className="font-medium text-white">{item.weight}</span></div>
-            </div>
-            <p className="mt-1 text-xs text-gray-300 line-clamp-2 whitespace-pre-line">{item.desc}</p>
+    <motion.div
+      className="fixed inset-0 z-[70] flex items-center justify-center px-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      dir="rtl"
+    >
+      <button type="button" aria-label="بستن" className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <motion.div
+        initial={{ opacity: 0, y: 16, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 10, scale: 0.98 }}
+        transition={{ duration: 0.28 }}
+        className="relative w-full max-w-md glass-panel rounded-3xl p-6"
+      >
+        <button type="button" onClick={onClose} className="absolute top-4 left-4 p-1.5 rounded-lg text-zinc-400 hover:bg-white/5">
+          <X className="w-4 h-4" />
+        </button>
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-9 h-9 rounded-xl bg-amber-400/15 border border-amber-300/20 flex items-center justify-center">
+            <Crown className="w-4 h-4 text-amber-300" />
           </div>
-        </label>
-      </div>
-      <div className="flex items-center gap-2">
-        <button onClick={(e) => { e.stopPropagation(); setOpen(s => !s); }} className="px-3 py-1 text-xs bg-indigo-600/50 text-indigo-200 rounded-md hover:bg-indigo-500/50">{open ? 'پنهان' : 'توضیحات'}</button>
-      </div>
-      {open && (
-        <div className="w-full">
-          <div className="p-3 bg-indigo-800/30 rounded-md text-xs text-gray-200 border border-indigo-500/20 whitespace-pre-line leading-relaxed">{item.detailedDesc || item.desc}</div>
+          <h2 className="text-lg font-bold text-white">دسترسی پریمیوم</h2>
         </div>
-      )}
-    </article>
+        <p className="text-sm text-zinc-400 mb-5 leading-relaxed">
+          این بخش با دسترسی پایه بسته است. پسورد را وارد کن تا باز شود.
+        </p>
+        <form onSubmit={onSubmit} className="space-y-3">
+          <PasswordField
+            password={password}
+            error={error}
+            shakeId={shakeId}
+            onPasswordChange={onPasswordChange}
+            centered
+          />
+          <button type="submit" className="btn-primary w-full">باز کردن دسترسی پریمیوم</button>
+          <button type="button" onClick={onClose} className="btn-ghost w-full text-sm py-2.5">ماندن با دسترسی پایه</button>
+        </form>
+      </motion.div>
+    </motion.div>
   );
 }
+
+function ChecklistCard({ item, index, checked, onToggle, isPremium, onRequestPremium }) {
+  const [open, setOpen] = useState(false);
+  const IconComponent = ICON_MAP[item.icon];
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, delay: Math.min(index * 0.02, 0.35) }}
+      className={`check-row soft-panel rounded-2xl lg:rounded-[1.35rem] p-4 sm:p-5 lg:p-6 ${checked ? "is-checked" : ""}`}
+    >
+      <div className="flex items-start gap-3 sm:gap-4">
+        <button
+          type="button"
+          onClick={onToggle}
+          className={`mt-0.5 w-6 h-6 sm:w-7 sm:h-7 rounded-lg border flex items-center justify-center shrink-0 transition-colors ${
+            checked
+              ? "bg-teal-400 border-teal-300 text-zinc-950"
+              : "border-white/20 bg-black/20 text-transparent hover:border-white/35"
+          }`}
+          aria-label={item.title}
+        >
+          <CheckCircle className="w-4 h-4" />
+        </button>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-2.5 sm:gap-3 min-w-0">
+              <div className={`mt-0.5 w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 border ${
+                checked ? "bg-teal-400/10 border-teal-300/20 text-teal-300" : "bg-white/5 border-white/10 text-rose-300"
+              }`}>
+                <IconComponent className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-sm sm:text-[15px] lg:text-base font-bold text-white leading-snug">{item.title}</h3>
+                <p className="mt-1.5 text-xs sm:text-[13px] text-zinc-400 leading-relaxed line-clamp-2 lg:line-clamp-3 whitespace-pre-line">{item.desc}</p>
+              </div>
+            </div>
+            <span className="shrink-0 text-[11px] font-semibold text-zinc-400 bg-white/5 border border-white/10 rounded-full px-2.5 py-1">
+              وزن {item.weight}
+            </span>
+          </div>
+
+          <div className="mt-3.5">
+            <button
+              type="button"
+              onClick={() => {
+                if (!isPremium) {
+                  onRequestPremium();
+                  return;
+                }
+                setOpen((s) => !s);
+              }}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-300 hover:text-white transition-colors"
+            >
+              {!isPremium ? <Lock className="w-3.5 h-3.5 text-rose-300" /> : <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? "rotate-180" : ""}`} />}
+              {isPremium && open ? "پنهان کردن توضیحات" : "توضیحات بیشتر"}
+            </button>
+          </div>
+
+          <AnimatePresence initial={false}>
+            {isPremium && open && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.25 }}
+                className="overflow-hidden"
+              >
+                <div className="mt-3 p-3.5 sm:p-4 rounded-xl bg-black/25 border border-white/8 text-xs sm:text-[13px] text-zinc-300 whitespace-pre-line leading-relaxed">
+                  {item.detailedDesc || item.desc}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </motion.article>
+  );
+}
+
 function ProgressRing({ percent = 0, size = 72, stroke = 7 }) {
+  const uid = useId().replace(/:/g, "");
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (percent / 100) * circumference;
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
       <defs>
-        <linearGradient id="g1" x1="0%" x2="100%">
-          <stop offset="0%" stopColor="#7c3aed" />
-          <stop offset="100%" stopColor="#06b6d4" />
+        <linearGradient id={`ring-${uid}`} x1="0%" x2="100%">
+          <stop offset="0%" stopColor="#e11d48" />
+          <stop offset="55%" stopColor="#fb7185" />
+          <stop offset="100%" stopColor="#2dd4bf" />
         </linearGradient>
       </defs>
       <g transform={`rotate(-90 ${size / 2} ${size / 2})`}>
-        <circle cx={size / 2} cy={size / 2} r={radius} stroke="#312e81" strokeWidth={stroke} fill="transparent" />
-        <circle cx={size / 2} cy={size / 2} r={radius} stroke="url(#g1)" strokeWidth={stroke} strokeLinecap="round" fill="transparent" strokeDasharray={circumference} strokeDashoffset={offset} />
+        <circle cx={size / 2} cy={size / 2} r={radius} stroke="rgba(255,255,255,0.08)" strokeWidth={stroke} fill="transparent" />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={`url(#ring-${uid})`}
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          fill="transparent"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          style={{ transition: "stroke-dashoffset 0.45s ease" }}
+        />
       </g>
-      <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize={size * 0.22} fontWeight={700} fill="#ffffff">{percent}%</text>
+      <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize={size * 0.22} fontWeight={800} fill="#ffffff">
+        {percent}%
+      </text>
     </svg>
   );
 }
+
 function ResultsPage({ percent, recommendations, onBack }) {
   const getStatusText = () => {
-    if (percent >= 80) return { text: "عالی! 🎉", desc: "ویدیوی تو در وضعیت بسیار خوبی است و آماده انتشار است. فقط چند نکته کوچک را بررسی کن تا آن را به حد عالی برسانی.", color: "text-green-400" };
-    if (percent >= 60) return { text: "خوب 👍", desc: "ویدیوی تو در مسیر درستی قرار دارد و پایه‌های محکمی دارد. با رعایت توصیه‌های زیر می‌توانی آن را به سطح بالاتری برسانی.", color: "text-blue-400" };
-    if (percent >= 40) return { text: "متوسط ⚠️", desc: "ویدیوی تو نیاز به بهبود و کار بیشتری دارد. توصیه‌های زیر را جدی بگیر و سعی کن موارد مهم را رعایت کنی.", color: "text-yellow-400" };
-    return { text: "نیازمند تمرکز بیشتر 🔴", desc: "ویدیوی تو نیاز به کار و بهبود قابل توجهی دارد. توصیه‌های زیر را اولویت بده و سعی کن موارد مهم را رعایت کنی تا شانس موفقیت افزایش یابد.", color: "text-red-400" };
+    if (percent >= 80) return { text: "عالی", desc: "ویدیوی تو در وضعیت بسیار خوبی است و آماده انتشار است. فقط چند نکته کوچک را بررسی کن تا آن را به حد عالی برسانی.", color: "text-teal-300" };
+    if (percent >= 60) return { text: "خوب", desc: "ویدیوی تو در مسیر درستی قرار دارد و پایه‌های محکمی دارد. با رعایت توصیه‌های زیر می‌توانی آن را به سطح بالاتری برسانی.", color: "text-sky-300" };
+    if (percent >= 40) return { text: "متوسط", desc: "ویدیوی تو نیاز به بهبود و کار بیشتری دارد. توصیه‌های زیر را جدی بگیر و سعی کن موارد مهم را رعایت کنی.", color: "text-amber-300" };
+    return { text: "نیازمند تمرکز بیشتر", desc: "ویدیوی تو نیاز به کار و بهبود قابل توجهی دارد. توصیه‌های زیر را اولویت بده تا شانس موفقیت افزایش یابد.", color: "text-rose-300" };
   };
-  
   const status = getStatusText();
-  
+
   return (
-    <div dir="rtl" className="min-h-screen bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] pt-8 pb-8 px-4">
-      <div className="max-w-4xl mx-auto">
-        <button onClick={onBack} className="mb-6 inline-flex items-center gap-2 px-4 py-2 bg-indigo-900/50 text-gray-200 rounded-lg shadow-sm hover:bg-indigo-800/50 text-sm border border-indigo-500/20">
+    <SiteShell className="pb-10">
+      <div className="page-frame pt-5 sm:pt-7 lg:pt-9">
+        <button onClick={onBack} className="btn-ghost text-sm py-2.5 px-3.5 mb-6">
           <ArrowLeft className="w-4 h-4" /> بازگشت به چک‌لیست
         </button>
-        
-        <div className="bg-gradient-to-br from-indigo-900/50 to-indigo-700/30 border border-indigo-500/20 rounded-2xl p-8 shadow-lg backdrop-blur-md mb-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex-1">
-              <h1 className="text-3xl font-extrabold text-white mb-4">نتایج بررسی نهایی</h1>
-              <p className="text-gray-300 mb-4">{status.desc}</p>
-              <div className={`text-2xl font-bold ${status.color} flex items-center gap-2`}>
-                <Sparkles className="w-6 h-6" />
+
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-panel rounded-[1.75rem] p-6 sm:p-8 lg:p-10 mb-8"
+        >
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8 lg:gap-12">
+            <div className="flex-1 text-center md:text-right">
+              <p className="text-[11px] tracking-[0.2em] text-rose-300/80 font-semibold mb-2">FINAL REVIEW</p>
+              <h1 className="text-3xl lg:text-4xl font-black text-white mb-3">نتایج بررسی نهایی</h1>
+              <p className="text-zinc-400 mb-4 leading-relaxed max-w-xl md:mr-0 mx-auto">{status.desc}</p>
+              <div className={`text-xl font-bold ${status.color} inline-flex items-center gap-2`}>
+                <Sparkles className="w-5 h-5" />
                 وضعیت: {status.text}
               </div>
             </div>
-            <div className="flex flex-col items-center gap-4">
-              <div className="w-32 h-32">
-                <ProgressRing percent={percent} size={128} stroke={8} />
-              </div>
+            <div className="flex flex-col items-center gap-3 shrink-0">
+              <ProgressRing percent={percent} size={150} stroke={9} />
               <div className="text-center">
-                <div className="text-lg text-gray-300">احتمال وایرال شدن</div>
-                <div className="text-3xl font-bold text-white">{percent}%</div>
+                <div className="text-sm text-zinc-500">احتمال وایرال شدن</div>
+                <div className="text-3xl font-black text-white">{percent}%</div>
               </div>
             </div>
           </div>
-        </div>
-        
-        <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Target className="w-6 h-6 text-indigo-400" />
+        </motion.div>
+
+        <div className="space-y-5 max-w-4xl mx-auto lg:max-w-none">
+          <h2 className="text-xl lg:text-2xl font-bold text-white flex items-center gap-2">
+            <Target className="w-5 h-5 text-rose-300" />
             توصیه‌هایی برای بهبود محتوا
           </h2>
-          
+
           {recommendations.length === 0 ? (
-            <div className="bg-gradient-to-br from-green-900/50 to-green-700/30 border border-green-500/20 rounded-2xl p-6 shadow-lg backdrop-blur-md">
+            <div className="rounded-3xl border border-teal-400/20 bg-[var(--teal-soft)] p-6">
               <div className="flex items-center gap-3 mb-2">
-                <CheckCircle className="w-6 h-6 text-green-400" />
-                <h3 className="text-xl font-bold text-white">تبریک! 🎉</h3>
+                <CheckCircle className="w-6 h-6 text-teal-300" />
+                <h3 className="text-xl font-bold text-white">تبریک</h3>
               </div>
-              <p className="text-gray-200">تبریک! همه موارد مهم و ضروری را رعایت کرده‌ای. ویدیوی تو در بهترین حالت ممکن است و آماده انتشار است. موفق باشی! 🎉</p>
+              <p className="text-zinc-200 leading-relaxed">همه موارد مهم را رعایت کرده‌ای. ویدیوی تو آماده انتشار است.</p>
             </div>
           ) : (
-            recommendations.map((rec, idx) => (
-              <div key={idx} className="bg-gradient-to-br from-indigo-900/50 to-indigo-700/30 border border-indigo-500/20 rounded-2xl p-6 shadow-lg backdrop-blur-md">
-                <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                  {rec.type === "critical" && <span className="text-red-400">🔴</span>}
-                  {rec.type === "category" && <span className="text-blue-400">📋</span>}
-                  {rec.title}
-                </h3>
-                <div className="space-y-4">
-                  {rec.items.map((item, itemIdx) => (
-                    <div key={itemIdx} className="bg-indigo-800/30 rounded-lg p-4 border border-indigo-500/20">
-                      <div className="flex items-start justify-between gap-3 mb-2">
-                        <h4 className="font-semibold text-white flex-1">{item.title}</h4>
-                        <span className="text-xs bg-indigo-600/50 text-indigo-200 px-2 py-1 rounded">وزن: {item.weight}</span>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-5">
+              {recommendations.map((rec, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.06 }}
+                  className="soft-panel rounded-3xl p-5 sm:p-6"
+                >
+                  <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    {rec.type === "critical" ? (
+                      <span className="text-xs font-bold px-2 py-1 rounded-full bg-rose-500/15 text-rose-300 border border-rose-400/20">اولویت</span>
+                    ) : (
+                      <span className="text-xs font-bold px-2 py-1 rounded-full bg-white/5 text-zinc-300 border border-white/10">دسته</span>
+                    )}
+                    {rec.title}
+                  </h3>
+                  <div className="space-y-3">
+                    {rec.items.map((item, itemIdx) => (
+                      <div key={itemIdx} className="rounded-2xl bg-black/20 border border-white/8 p-4">
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                          <h4 className="font-semibold text-white flex-1">{item.title}</h4>
+                          <span className="text-[11px] bg-white/5 text-zinc-300 px-2 py-1 rounded-full border border-white/10">وزن {item.weight}</span>
+                        </div>
+                        <p className="text-sm text-zinc-400 leading-relaxed">{item.suggestion}</p>
                       </div>
-                      <p className="text-sm text-gray-300 leading-relaxed">{item.suggestion}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))
+                    ))}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           )}
         </div>
-        
-        <div className="mt-8 bg-gradient-to-br from-purple-900/50 to-purple-700/30 border border-purple-500/20 rounded-2xl p-6 shadow-lg backdrop-blur-md">
-          <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
-            <Info className="w-5 h-5 text-purple-400" />
+
+        <div className="mt-8 soft-panel rounded-3xl p-5 sm:p-6 max-w-4xl mx-auto lg:max-w-none">
+          <h3 className="text-base font-bold text-white mb-2 flex items-center gap-2">
+            <Info className="w-4 h-4 text-teal-300" />
             نکته مهم
           </h3>
-          <p className="text-sm text-gray-300 leading-relaxed">
-            این توصیه‌ها بر اساس مواردی که انتخاب نکرده‌ای و وزن اهمیت هر مورد تولید شده‌اند. 
-            سعی کن اولویت‌های مهم (موارد با وزن ۷ و بالاتر) را ابتدا رعایت کنی چون تاثیر بیشتری روی موفقیت ویدیو دارند. 
-            هرچه بیشتر این موارد را رعایت کنی، شانس وایرال شدن ویدیوی تو بیشتر می‌شود و الگوریتم اینستاگرام 
-            سیگنال‌های مثبت بیشتری دریافت می‌کند. به یاد داشته باش که کیفیت محتوا مهم‌تر از کمیت است، 
-            پس سعی کن هر مورد را به بهترین شکل ممکن رعایت کنی.
+          <p className="text-sm text-zinc-400 leading-relaxed">
+            این توصیه‌ها بر اساس موارد انتخاب‌نشده و وزن اهمیت هر مورد ساخته شده‌اند.
+            اولویت‌های با وزن ۷ به بالا را اول رعایت کن. کیفیت محتوا مهم‌تر از کمیت است.
           </p>
         </div>
       </div>
-    </div>
+    </SiteShell>
   );
 }
